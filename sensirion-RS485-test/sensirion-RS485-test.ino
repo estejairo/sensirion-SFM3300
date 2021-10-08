@@ -1,6 +1,6 @@
 /* Source: protosupplies.com
  * RS485 Master Software
- * Exercise the MAX485 Module.  This code runs on the first (Master)device.
+ * Exercise the MAX485 Module.
  * This uses the SoftSerial.h library which comes with the Arduino IDE
  * Pins used for the soft serial port are fairly arbitrary and can be changed
  * as needed.  Just redefine them below.
