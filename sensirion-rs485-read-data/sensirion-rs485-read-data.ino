@@ -87,7 +87,7 @@ void loop()
       delay(10);
       digitalWrite(LED_PIN, LOW);           // Turn LED back off
      }
-     crc_calculation = SMF3000_CheckCrc(byteReceived, 6, checksum);
+     crc_calculation = SMF3000_CheckCrc(byteReceived, 5, byteReceived[5]);
      if (crc_calculation == CHECKSUM_ERROR){
        Serial.println("CRC-Check Error.");
      }
