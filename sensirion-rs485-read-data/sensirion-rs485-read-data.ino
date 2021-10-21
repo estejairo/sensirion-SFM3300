@@ -1,4 +1,4 @@
-/* Data Reading script for Sensirion SF3300 with Nicolay RS485 clip-on cap.
+/* Data Reading script for Sensirion SMF3300 with Nicolay RS485 clip-on cap.
  * 
  * Author: Jairo Gonzalez 
  * Date:        21.10.2021
@@ -38,11 +38,10 @@ typedef enum{
 }etError;
 
 typedef unsigned char u8t;
-int crc_calculation;
 
 //Checksum placeholder
-int checksum = 0x31;
-byte data[3] = {0x01,0x05,0x00};
+int crc_calculation;
+int checksum = 0x7D;
 
 
 
@@ -69,8 +68,6 @@ void setup()
 //===============================================================================
 void loop() 
 {
-  crc_calculation = SMF3000_CheckCrc (data, 3, checksum);
-  Serial.println(crc_calculation,HEX);
 
   if (Serial.available())         // A char(byte) has been entered in the Serial Monitor
   {
@@ -89,6 +86,13 @@ void loop()
       Serial.println(byteReceived[i], HEX);
       delay(10);
       digitalWrite(LED_PIN, LOW);           // Turn LED back off
+     }
+     crc_calculation = SMF3000_CheckCrc(byteReceived, 6, checksum);
+     if (crc_calculation == CHECKSUM_ERROR){
+       Serial.println("CRC-Check Error.");
+     }
+     else{
+       Serial.println("CRC-Check OK.");
      }
    }
 
@@ -109,6 +113,9 @@ u8t SMF3000_CheckCrc (u8t data[], u8t nbrOfBytes, u8t checksum)
 // checksum expected checksum
 //return: error: CHECKSUM_ERROR = checksum does not match
 // 0 = checksum matches
+//
+// Source: Sensirion CRC Checksum application note.
+// https://www.sensirion.com/fileadmin/user_upload/customers/sensirion/Dokumente/5_Mass_Flow_Meters/Application_Notes/Sensirion_GF_AN_SFM-04_CRC_Checksum_D1.pdf
 //============================================================
 {
   u8t crc = 0;
