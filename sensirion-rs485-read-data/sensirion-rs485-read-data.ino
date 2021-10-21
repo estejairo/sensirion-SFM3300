@@ -1,13 +1,14 @@
 /* Data Reading script for Sensirion SMF3300 with Nicolay RS485 clip-on cap.
  * 
- * Author: Jairo Gonzalez 
- * Date:        21.10.2021
+ * @author Jairo Gonzalez 
+ * @date 21.10.2021
  */
 
 //===============================================================================
 //  Includes
 //==============================================================================
 #include <SoftwareSerial.h>
+#include <Nicolay.h>
 
 
 //===============================================================================
