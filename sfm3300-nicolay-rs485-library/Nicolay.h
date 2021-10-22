@@ -11,21 +11,25 @@
 
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include "Crc8.h"
 
 class Nicolay{
   public:
-    Nicolay(byte slaveAddress, int rxPin, int txPin, int ctrlPin, int ledPin);
-    Nicolay() : RS485Serial(rxPin, txPin) {}
+    Nicolay(unsigned char slaveAddress, int rxPin, int txPin, int ctrlPin, int ledPin);
     unsigned char testCommand();
+    typedef enum{
+      CHECKSUM_ERROR = 0x04
+    }etError;
+
   private:
-    byte _slaveAddress;
+    unsigned char _slaveAddress;
     int _rxPin;
     int _txPin;    
     int _ctrlPin;
     int _ledPin;
     const int RS485_TRANSMIT = HIGH;
     const int RS485_RECEIVE = LOW;
-    SoftwareSerial RS485Serial;
+    SoftwareSerial RS485Serial = SoftwareSerial(10, 11);
 };
 
 

@@ -1,4 +1,4 @@
-/* Data Reading script for Sensirion SMF3300 with Nicolay RS485 clip-on cap.
+/* Demonstrative script for Sensirion SMF3300 with Nicolay RS485 clip-on cap.
  * 
  * @author Jairo Gonzalez 
  * @date 21.10.2021
@@ -9,10 +9,13 @@
 //==============================================================================
 #include <SoftwareSerial.h>
 #include "Nicolay.h"
+#include "Crc8.h"
 
 
 
-
+// typedef enum{
+//   CHECKSUM_ERROR = 0x04
+// }etError;
 
 
 //==============================================================================
@@ -48,12 +51,17 @@ void loop()
   if (Serial.available())         // A char(byte) has been entered in the Serial Monitor
   {
     Serial.read();  // Read the byte
-    int error = sfm3300.testCommand();
-    if (error == 4){
+
+    unsigned char testOutput = sfm3300.testCommand();
+    if (testOutput == 4){
       Serial.println("Checksum Failed.");
     }
-    else{
+    else if (testOutput == 0){
       Serial.println("Success!");
+    }
+    else{
+      Serial.print("testOutput: ");
+      Serial.println(testOutput);
     }
   }
 }
