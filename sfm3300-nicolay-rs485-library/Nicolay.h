@@ -18,6 +18,8 @@ class Nicolay{
     Nicolay(unsigned char slaveAddress, int rxPin, int txPin, int ctrlPin, int ledPin);
     unsigned char testCommand();
     unsigned long* getArticleNo();
+    unsigned char start();
+    long* getFlowMeasurement();
     typedef enum{
       CHECKSUM_ERROR = 0x04
     }etError;

@@ -52,18 +52,16 @@ void loop()
   {
     Serial.read();  // Read the byte
 
-    unsigned long* getArticleNoOutput;
-    getArticleNoOutput = sfm3300.getArticleNo();
-    if (*(getArticleNoOutput+3) == 4){
+    long* startOutput;
+    startOutput = sfm3300.getFlowMeasurement();
+    if (*(startOutput+1) == 4){
       Serial.println("Checksum Failed.");
     }
+    else if (*startOutput==2147483647){
+      Serial.println("The sensor is not readable. Please perform a hardware reset.");
+    }
     else{
-      Serial.println("getArticleNoOutput:");
-      Serial.print(*(getArticleNoOutput+2));
-      Serial.print("-");
-      Serial.print(*(getArticleNoOutput+1));
-      Serial.print("-");
-      Serial.println(*(getArticleNoOutput));
+      Serial.println(*startOutput);
     }
   }
 }
