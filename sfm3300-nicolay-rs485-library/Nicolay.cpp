@@ -57,68 +57,33 @@ unsigned char Nicolay::testCommand(){
     }  
 }
 
-// //===============================================================================
-// //  CRC-8 Cheksum function
-// //===============================================================================
-// #define POLYNOMIAL 0x131 //P(x)=x^8+x^5+x^4+1 = 100110001
-// //============================================================
-// unsigned char SMF3000_CheckCrc (unsigned char data[], unsigned char nbrOfBytes, unsigned char checksum)
-// //============================================================
-// //calculates checksum for n bytes of data
-// //and compares it with expected checksum
-// //input: data[] checksum is built based on this data
-// // nbrOfBytes checksum is built for n bytes of data
-// // checksum expected checksum
-// //return: error: CHECKSUM_ERROR = checksum does not match
-// // 0 = checksum matches
-// //
-// // Source: Sensirion CRC Checksum application note.
-// // https://www.sensirion.com/fileadmin/user_upload/customers/sensirion/Dokumente/5_Mass_Flow_Meters/Application_Notes/Sensirion_GF_AN_SFM-04_CRC_Checksum_D1.pdf
-// //============================================================
-// {
-//   unsigned char crc = 0;
-//   unsigned char byteCtr;
-//   //calculates 8-Bit checksum with given polynomial
-//   for (byteCtr = 0; byteCtr < nbrOfBytes; ++byteCtr)
-//   {
-//       crc ^= (data[byteCtr]);
-//       for (unsigned char bit = 8; bit > 0; --bit)
-//       {
-//         if (crc & 0x80) 
-//           crc = (crc << 1) ^ POLYNOMIAL;
-//         else 
-//           crc = (crc << 1);
-//     }
-//   }
-//   if (crc != checksum)
-//   {
-//     return CHECKSUM_ERROR;
-//   }
-//   else
-//   {
-//     return 0;
-//   }
-// }
+unsigned long* Nicolay::getArticleNo(){
+    static unsigned long serialNumber[4];
+    unsigned char bToWrite[3] = {_slaveAddress,0x0A,0x00};
+    unsigned char byteReceived[8];
+    unsigned char checksum = calculateCrc(bToWrite, 3);
+    unsigned char bToWrite_and_cheksum[4] = {bToWrite[0],bToWrite[1],bToWrite[2],checksum};
+    digitalWrite(_ctrlPin, RS485_TRANSMIT); // Put RS485 in Transmit mode
+    RS485Serial.write(bToWrite_and_cheksum,4); // Send bytes to slave
+    digitalWrite(_ctrlPin, RS485_RECEIVE); // Put RS485 back into Receive mode
 
-// //===============================================================================
-// //  CRC-8 Cheksum calculation function
-// //===============================================================================
-// #define POLYNOMIAL 0x131 //P(x)=x^8+x^5+x^4+1 = 100110001
-// //============================================================
-// unsigned char SMF3000_CalculateCrc (unsigned char data[], unsigned char nbrOfBytes){
-//   unsigned char crc = 0;
-//   unsigned char byteCtr;
-//   //calculates 8-Bit checksum with given polynomial
-//   for (byteCtr = 0; byteCtr < nbrOfBytes; ++byteCtr)
-//   {
-//       crc ^= (data[byteCtr]);
-//       for (unsigned char bit = 8; bit > 0; --bit)
-//       {
-//         if (crc & 0x80) 
-//           crc = (crc << 1) ^ POLYNOMIAL;
-//         else 
-//           crc = (crc << 1);
-//     }
-//   }
-//   return crc;
-// }
+    while (true){
+      if (RS485Serial.available())            //Data from the Slave is available
+      {
+        for (int i = 0; i<8; i++){
+          digitalWrite(_ledPin, HIGH);          // Show activity on LED
+          byteReceived[i] = RS485Serial.read();    // Read received byte
+          delay(10);
+          digitalWrite(_ledPin, LOW);           // Turn LED back off
+        }
+        unsigned char crc_calculation = checkCrc(byteReceived, 7, byteReceived[7]);
+        serialNumber[3] = crc_calculation;
+        serialNumber[2] = byteReceived[6]>>4;
+        serialNumber[1] = byteReceived[6]&0x0F;
+        serialNumber[1] = (serialNumber[1]<<8)^byteReceived[5];
+        serialNumber[1] = (serialNumber[1]<<8)^byteReceived[4];
+        serialNumber[0] = byteReceived[3];
+        return serialNumber;
+    }
+    }  
+}

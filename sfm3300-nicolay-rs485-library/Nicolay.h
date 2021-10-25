@@ -17,6 +17,7 @@ class Nicolay{
   public:
     Nicolay(unsigned char slaveAddress, int rxPin, int txPin, int ctrlPin, int ledPin);
     unsigned char testCommand();
+    unsigned long* getArticleNo();
     typedef enum{
       CHECKSUM_ERROR = 0x04
     }etError;

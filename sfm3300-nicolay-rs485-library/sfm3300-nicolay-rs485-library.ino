@@ -52,16 +52,18 @@ void loop()
   {
     Serial.read();  // Read the byte
 
-    unsigned char testOutput = sfm3300.testCommand();
-    if (testOutput == 4){
+    unsigned long* getArticleNoOutput;
+    getArticleNoOutput = sfm3300.getArticleNo();
+    if (*(getArticleNoOutput+3) == 4){
       Serial.println("Checksum Failed.");
     }
-    else if (testOutput == 0){
-      Serial.println("Success!");
-    }
     else{
-      Serial.print("testOutput: ");
-      Serial.println(testOutput);
+      Serial.println("getArticleNoOutput:");
+      Serial.print(*(getArticleNoOutput+2));
+      Serial.print("-");
+      Serial.print(*(getArticleNoOutput+1));
+      Serial.print("-");
+      Serial.println(*(getArticleNoOutput));
     }
   }
 }
