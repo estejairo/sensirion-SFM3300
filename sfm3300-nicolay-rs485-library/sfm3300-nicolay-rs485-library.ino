@@ -12,7 +12,6 @@
 #include "Crc8.h"
 
 
-
 // typedef enum{
 //   CHECKSUM_ERROR = 0x04
 // }etError;
@@ -50,18 +49,14 @@ void loop()
 
   if (Serial.available())         // A char(byte) has been entered in the Serial Monitor
   {
+    unsigned long timeElapsed = millis();
     Serial.read();  // Read the byte
-
-    long* startOutput;
-    startOutput = sfm3300.getFlowMeasurement();
-    if (*(startOutput+1) == 4){
-      Serial.println("Checksum Failed.");
-    }
-    else if (*startOutput==2147483647){
-      Serial.println("The sensor is not readable. Please perform a hardware reset.");
-    }
-    else{
-      Serial.println(*startOutput);
+    while ((millis()-timeElapsed) < 60000){
+      long* startOutput;
+      startOutput = sfm3300.getFlowMeasurement();
+      if ((*(startOutput+1) != 4) && (*startOutput!=2147483647)){
+        Serial.println(*startOutput);
+      }
     }
   }
 }
