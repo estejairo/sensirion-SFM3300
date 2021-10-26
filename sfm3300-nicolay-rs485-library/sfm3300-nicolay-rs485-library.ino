@@ -37,7 +37,7 @@ void setup()
 {
   Serial.begin(115200);           // Start the built-in serial port
   Serial.println("Master Device");
-  Serial.println("Type in upper window, press ENTER. This script will send test command to slave.");
+  Serial.println("Type in upper window, press ENTER. This script will send Get Flow Command to slave.");
 }
 
 
@@ -49,15 +49,43 @@ void loop()
 
   if (Serial.available())         // A char(byte) has been entered in the Serial Monitor
   {
-    unsigned long timeElapsed = millis();
     Serial.read();  // Read the byte
-    while ((millis()-timeElapsed) < 60000){
+    unsigned long startTime = millis();
+
+
+    unsigned long* articleNo = sfm3300.getArticleNo();
+    while( *(articleNo+3) == 4){
+      Serial.println("Cheksum failed. Not starting yet.");
+      articleNo = sfm3300.getArticleNo();
+    }
+    Serial.print("\n-------------------------------\nSensirion SFM-3300 | Article Number: ");
+    Serial.print(*(articleNo+2));
+    Serial.print("-");
+    Serial.print(*(articleNo+1));
+    Serial.print("-");
+    Serial.println(*(articleNo));
+    Serial.print("-------------------------------\n");
+
+
+    while (sfm3300.start()==4){
+      Serial.println("Cheksum failed. Not starting yet.");
+    }
+    Serial.println("Starting data acquisition.");
+
+    unsigned long timeElapsed = millis()-startTime;
+    while (timeElapsed < 60000){
       long* startOutput;
       startOutput = sfm3300.getFlowMeasurement();
-      if ((*(startOutput+1) != 4) && (*startOutput!=2147483647)){
+      if ((*startOutput==2147483647)){ //0x7FFFFFFF Data not readable
+        Serial.println("Data not readable, please perform a hardware reset.");
+      }
+      else if((*(startOutput+1) != 4)){
         Serial.println(*startOutput);
       }
+      timeElapsed = millis()-startTime;
     }
+    Serial.print("Done. Time elapsed (ms):");
+    Serial.println(timeElapsed);
   }
 }
 
