@@ -20,15 +20,16 @@
 #define NULL_BYTE 0x00
 #define press_max 2
 #define press_min -2
+const int slaveSelect = 10;
 float pressureHamilton;
 
 //==============================================================================
 //  RS485 variables
 //==============================================================================
-const int SSERIAL_RX_PIN = 10;  //Soft Serial Receive pin
-const int SSERIAL_TX_PIN = 11;  //Soft Serial Transmit pin
+const int SSERIAL_RX_PIN = 5;  //Soft Serial Receive pin
+const int SSERIAL_TX_PIN = 6;  //Soft Serial Transmit pin
 const int SSERIAL_CTRL_PIN= 3;   //RS485 Direction control
-const int LED_PIN = 13;
+const int LED_PIN = 4;
 const int SLAVE_ADDR = 1;
 
 // Create Nicolay object and define pins to use
@@ -40,6 +41,8 @@ Nicolay sfm3300(SLAVE_ADDR, SSERIAL_RX_PIN, SSERIAL_TX_PIN, SSERIAL_CTRL_PIN, LE
 //===============================================================================
 void setup()
 {
+  SPI.begin();
+  pinMode(slaveSelect,OUTPUT);
   Serial.begin(115200);           // Start the built-in serial port
   Serial.println("Master Device");
   Serial.println("Type in upper window, press ENTER to start the acquisition.");
@@ -55,19 +58,49 @@ void loop()
 
   if (Serial.available())         // A char(byte) has been entered in the Serial Monitor
   {
-    unsigned long timeElapsed = millis();
     Serial.read();  // Read the byte
-    while ((millis()-timeElapsed) < 60000){
+    unsigned long startTime = millis();
+
+
+    unsigned long* articleNo = sfm3300.getArticleNo();
+    while( *(articleNo+3) == 4){
+      Serial.println("Cheksum failed. Not starting yet.");
+      articleNo = sfm3300.getArticleNo();
+    }
+    Serial.print("\n-------------------------------\nSensirion SFM-3300 | Article Number: ");
+    Serial.print(*(articleNo+2));
+    Serial.print("-");
+    Serial.print(*(articleNo+1));
+    Serial.print("-");
+    Serial.println(*(articleNo));
+    Serial.print("-------------------------------\n");
+
+
+    while (sfm3300.start()==4){
+      Serial.println("Cheksum failed. Not starting yet.");
+    }
+    Serial.println("Starting data acquisition.");
+
+    unsigned long timeElapsed = millis()-startTime;
+    while ((timeElapsed) < 60000){
       long* startOutput;
       startOutput = sfm3300.getFlowMeasurement();
-      if ((*(startOutput+1) != 4) && (*startOutput!=2147483647)){
-        pressureHamilton = medir_presion_SPI(press_max, press_min);
+      pressureHamilton = medir_presion_SPI(press_max, press_min);
+      if ((*startOutput==2147483647)){ //0x7FFFFFFF Data not readable
+        Serial.println("Data not readable, please perform a hardware reset.");
+      }
+      // else if((*(startOutput+1) == 4)){
+      //   Serial.println("Cheksum Failed!");
+      // }
+      else {
         Serial.print(*startOutput);
         Serial.print(",");
         Serial.println(pressureHamilton);
       }
+      timeElapsed = millis()-startTime;
     }
-     Serial.println("Done");
+    Serial.print("Done. Time elapsed (ms):");
+    Serial.println(timeElapsed);
   }
 }
 
@@ -78,27 +111,22 @@ void loop()
 //  Date: 2020
 //==============================================================================
 float medir_presion_SPI(int p_max, int p_min) {
-
+  
   byte data[2] = {NULL_BYTE, NULL_BYTE};
   float pressure = 0;
   unsigned int pressure_raw = 0;
   byte pressure_mask = 0x3F;
   byte stat = 0x00;
 
-  const int out_min = 1638;
-  const int out_max = 14745;
+  //const int out_min = 1638;
+  //const int out_max = 14745;
 
   SPI.beginTransaction (SPISettings (800000, MSBFIRST, SPI_MODE0));
 
-  data[0] = NULL_BYTE;
-  data[1] = NULL_BYTE;
-
-  //PORTA &= ~(1 << PA3); // PIN 25 baja
-  digitalWrite(25, LOW); // Solo hacer tiempo
-
+  digitalWrite(10, LOW); 
   SPI.transfer(data, sizeof(data));
-  digitalWrite(25, HIGH); // Solo hacer tiempo
-  //PORTA |= (1 << PA3);  // PIN 25 SUBE
+  digitalWrite(10, HIGH);
+ 
   
   stat = data[0] >> 6;
   pressure_raw = ((data[0] & pressure_mask) << 8) + data[1];

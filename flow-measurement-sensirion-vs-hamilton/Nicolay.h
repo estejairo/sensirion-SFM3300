@@ -32,7 +32,7 @@ class Nicolay{
     int _ledPin;
     const int RS485_TRANSMIT = HIGH;
     const int RS485_RECEIVE = LOW;
-    SoftwareSerial RS485Serial = SoftwareSerial(10, 11);
+    SoftwareSerial RS485Serial = SoftwareSerial(5, 6);
 };
 
 
