@@ -11,12 +11,6 @@
 #include "Nicolay.h"
 #include "Crc8.h"
 
-
-// typedef enum{
-//   CHECKSUM_ERROR = 0x04
-// }etError;
-
-
 //==============================================================================
 //  RS485 variables
 //==============================================================================
@@ -50,11 +44,11 @@ void loop()
   if (Serial.available())         // A char(byte) has been entered in the Serial Monitor
   {
     Serial.read();  // Read the byte
-    unsigned long startTime = millis();
+    unsigned long startTime = millis(); //Time since the char was received
 
-
-    unsigned long* articleNo = sfm3300.getArticleNo();
-    while( *(articleNo+3) == 4){
+    // Printing SFM3300 Article number.
+    unsigned long* articleNo = sfm3300.getArticleNo(); //Pointer to receive array of 4 items
+    while( *(articleNo+3) == 4){ //4 means checksum error
       Serial.println("Cheksum failed. Not starting yet.");
       articleNo = sfm3300.getArticleNo();
     }
@@ -66,21 +60,22 @@ void loop()
     Serial.println(*(articleNo));
     Serial.print("-------------------------------\n");
 
-
+    // Starting SFM3300 acquisition
     while (sfm3300.start()==4){
       Serial.println("Cheksum failed. Not starting yet.");
     }
     Serial.println("Starting data acquisition.");
 
+    //Printing data read at every sensor, during 1min
     unsigned long timeElapsed = millis()-startTime;
-    while (timeElapsed < 60000){
-      long* startOutput;
-      startOutput = sfm3300.getFlowMeasurement();
-      if ((*startOutput==2147483647)){ //0x7FFFFFFF Data not readable
+    while (timeElapsed < 60000){ //1min in miliseconds
+      long* startOutput; //Pointer, to receive an array of 2 numbers
+      startOutput = sfm3300.getFlowMeasurement(); //Sensirion SFM3300 flow measurement
+      if ((*startOutput==2147483647)){ //0x7FFFFFFF, means data not readable
         Serial.println("Data not readable, please perform a hardware reset.");
       }
       else if((*(startOutput+1) != 4)){
-        Serial.println(*startOutput);
+        Serial.println(*startOutput); //Prints data on serial terminal
       }
       timeElapsed = millis()-startTime;
     }

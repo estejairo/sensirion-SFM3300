@@ -63,7 +63,7 @@ void loop()
 
     // Printing SFM3300 Article number, no reason why.
     unsigned long* articleNo = sfm3300.getArticleNo(); //Pointer to receive array of 4 items
-    while( *(articleNo+3) == 4){
+    while( *(articleNo+3) == 4){ //4 means checksum error
       Serial.println("Cheksum failed. Not starting yet.");
       articleNo = sfm3300.getArticleNo();
     }
