@@ -1,5 +1,5 @@
 /* This script reads a pressure sensor connected to a Hamilton flow transducer
- * and reads also the output of a sensirion SFM3300 flow meter, to
+ * and reads also the output of a sensirion SFM3300 flow meter, for
  * characterization of the Hamilton transducer.
  * 
  * @author Jairo Gonzalez 
@@ -59,10 +59,10 @@ void loop()
   if (Serial.available())         // A char(byte) has been entered in the Serial Monitor
   {
     Serial.read();  // Read the byte
-    unsigned long startTime = millis();
+    unsigned long startTime = millis(); //Time since the char was received
 
-
-    unsigned long* articleNo = sfm3300.getArticleNo();
+    // Printing SFM3300 Article number, no reason why.
+    unsigned long* articleNo = sfm3300.getArticleNo(); //Pointer to receive array of 4 items
     while( *(articleNo+3) == 4){
       Serial.println("Cheksum failed. Not starting yet.");
       articleNo = sfm3300.getArticleNo();
@@ -75,24 +75,22 @@ void loop()
     Serial.println(*(articleNo));
     Serial.print("-------------------------------\n");
 
-
+    // Starting SFM3300 acquisition
     while (sfm3300.start()==4){
       Serial.println("Cheksum failed. Not starting yet.");
     }
     Serial.println("Starting data acquisition.");
 
+    //Printing data read at every sensor, during 25min
     unsigned long timeElapsed = millis()-startTime;
-    while ((timeElapsed) < 60000){
-      long* startOutput;
-      startOutput = sfm3300.getFlowMeasurement();
-      pressureHamilton = medir_presion_SPI(press_max, press_min);
-      if ((*startOutput==2147483647)){ //0x7FFFFFFF Data not readable
+    while ((timeElapsed) < 1500000){ //25min in miliseconds
+      long* startOutput; //Pointer, to receive an array of 2 numbers
+      startOutput = sfm3300.getFlowMeasurement(); //Sensirion SFM3300 flow measurement
+      pressureHamilton = medir_presion_SPI(press_max, press_min); //Honeywell pressure sensore (hamilton)
+      if ((*startOutput==2147483647)){ //0x7FFFFFFF, means data not readable
         Serial.println("Data not readable, please perform a hardware reset.");
       }
-      // else if((*(startOutput+1) == 4)){
-      //   Serial.println("Cheksum Failed!");
-      // }
-      else {
+      else { //Prints data on serial terminal
         Serial.print(*startOutput);
         Serial.print(",");
         Serial.println(pressureHamilton);
